@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+    xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+    xsi:type="TaskPaneApp">
+    <Id>d9a60772-b58a-4ad5-97bf-f68d598a4359</Id>
+    <Version>1.0.0.0</Version>
+    <ProviderName>Contoso</ProviderName>
+    <DefaultLocale>en-US</DefaultLocale>
+    <DisplayName DefaultValue="WordNumberFormatter" />
+    <Description DefaultValue="为文档中整数>=4位、小数恰好2位的数字添加千分符的 Word 加载项。" />
+    <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png" />
+    <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-64.png" />
+    <SupportUrl DefaultValue="https://www.contoso.com/help" />
+    <AppDomains>
+        <AppDomain>https://www.contoso.com</AppDomain>
+    </AppDomains>
+    <Hosts>
+        <Host Name="Document" />
+    </Hosts>
+    <DefaultSettings>
+        <SourceLocation DefaultValue="https://localhost:3000/taskpane.html" />
+    </DefaultSettings>
+    <Permissions>ReadWriteDocument</Permissions>
+    <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+        xsi:type="VersionOverridesV1_0">
+        <Hosts>
+            <Host xsi:type="Document">
+                <DesktopFormFactor>
+                    <GetStarted>
+                        <Title resid="GetStarted.Title" />
+                        <Description resid="GetStarted.Description" />
+                        <LearnMoreUrl resid="GetStarted.LearnMoreUrl" />
+                    </GetStarted>
+                    <!-- 修正：<FunctionFile> 必须自闭合，<ExtensionPoint> 作为 <DesktopFormFactor> 的兄弟元素，
+                         而非嵌套在 <FunctionFile> 内（文档原写法违反 manifest schema） -->
+                    <FunctionFile resid="Commands.Url" />
+                    <ExtensionPoint xsi:type="PrimaryCommandSurface">
+                        <OfficeTab id="TabHome">
+                            <Group id="CommandsGroup">
+                                <Label resid="CommandsGroup.Label" />
+                                <Icon>
+                                    <bt:Image size="16" resid="Icon.16x16" />
+                                    <bt:Image size="32" resid="Icon.32x32" />
+                                    <bt:Image size="80" resid="Icon.80x80" />
+                                </Icon>
+                                <!-- SplitButton：主按钮 + 下拉菜单 -->
+                                <Control xsi:type="SplitButton" id="NumberFormatterSplit">
+                                    <Label resid="SplitButton.Label" />
+                                    <Supertip>
+                                        <Title resid="SplitButton.Label" />
+                                        <Description resid="SplitButton.Tooltip" />
+                                    </Supertip>
+                                    <Icon>
+                                        <bt:Image size="16" resid="Icon.16x16" />
+                                        <bt:Image size="32" resid="Icon.32x32" />
+                                        <bt:Image size="80" resid="Icon.80x80" />
+                                    </Icon>
+                                    <!-- 主按钮动作：一次替换正文 + 表格 -->
+                                    <Action xsi:type="ExecuteFunction">
+                                        <FunctionName>formatAllNumbers</FunctionName>
+                                    </Action>
+                                    <!-- 下拉菜单项 -->
+                                    <Items>
+                                        <Item id="BodyItem">
+                                            <Label resid="BodyItem.Label" />
+                                            <Supertip>
+                                                <Title resid="BodyItem.Label" />
+                                                <Description resid="BodyItem.Tooltip" />
+                                            </Supertip>
+                                            <Icon>
+                                                <bt:Image size="16" resid="Icon.16x16" />
+                                                <bt:Image size="32" resid="Icon.32x32" />
+                                                <bt:Image size="80" resid="Icon.80x80" />
+                                            </Icon>
+                                            <Action xsi:type="ExecuteFunction">
+                                                <FunctionName>formatBodyNumbers</FunctionName>
+                                            </Action>
+                                        </Item>
+                                        <Item id="TableItem">
+                                            <Label resid="TableItem.Label" />
+                                            <Supertip>
+                                                <Title resid="TableItem.Label" />
+                                                <Description resid="TableItem.Tooltip" />
+                                            </Supertip>
+                                            <Icon>
+                                                <bt:Image size="16" resid="Icon.16x16" />
+                                                <bt:Image size="32" resid="Icon.32x32" />
+                                                <bt:Image size="80" resid="Icon.80x80" />
+                                            </Icon>
+                                            <Action xsi:type="ExecuteFunction">
+                                                <FunctionName>formatTableNumbers</FunctionName>
+                                            </Action>
+                                        </Item>
+                                    </Items>
+                                </Control>
+                            </Group>
+                        </OfficeTab>
+                    </ExtensionPoint>
+                </DesktopFormFactor>
+            </Host>
+        </Hosts>
+        <Resources>
+            <bt:Images>
+                <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/assets/icon-16.png" />
+                <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/assets/icon-32.png" />
+                <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/icon-80.png" />
+            </bt:Images>
+            <bt:Urls>
+                <bt:Url id="GetStarted.LearnMoreUrl"
+                    DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812" />
+                <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html" />
+                <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html" />
+            </bt:Urls>
+            <bt:ShortStrings>
+                <bt:String id="GetStarted.Title" DefaultValue="千分符格式化工具" />
+                <bt:String id="CommandsGroup.Label" DefaultValue="千分符工具" />
+                <bt:String id="SplitButton.Label" DefaultValue="千分符" />
+                <bt:String id="BodyItem.Label" DefaultValue="文字替换" />
+                <bt:String id="TableItem.Label" DefaultValue="表格替换" />
+            </bt:ShortStrings>
+            <bt:LongStrings>
+                <bt:String id="GetStarted.Description" DefaultValue="为整数>=4位、小数恰好2位的数字添加千分符。" />
+                <bt:String id="SplitButton.Tooltip" DefaultValue="一次为正文和表格中的所有数字添加千分符" />
+                <bt:String id="BodyItem.Tooltip" DefaultValue="仅处理正文部分，忽略表格" />
+                <bt:String id="TableItem.Tooltip" DefaultValue="仅处理表格部分，忽略正文" />
+            </bt:LongStrings>
+        </Resources>
+    </VersionOverrides>
+</OfficeApp>
