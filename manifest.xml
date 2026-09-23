@@ -117,7 +117,7 @@
                 <bt:String id="GetStarted.Title" DefaultValue="千分符格式化工具" />
                 <bt:String id="CommandsGroup.Label" DefaultValue="千分符工具" />
                 <bt:String id="SplitButton.Label" DefaultValue="千分符" />
-                <bt:String id="BodyItem.Label" DefaultValue="文字替换" />
+                <bt:String id="BodyItem.Label" DefaultValue="文档替换" />
                 <bt:String id="TableItem.Label" DefaultValue="表格替换" />
             </bt:ShortStrings>
             <bt:LongStrings>
