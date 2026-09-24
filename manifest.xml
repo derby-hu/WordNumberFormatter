@@ -45,24 +45,34 @@
                                     <bt:Image size="32" resid="Icon.32x32" />
                                     <bt:Image size="80" resid="Icon.80x80" />
                                 </Icon>
-                                <!-- SplitButton：主按钮 + 下拉菜单 -->
-                                <Control xsi:type="SplitButton" id="NumberFormatterSplit">
-                                    <Label resid="SplitButton.Label" />
+                                <!-- 下拉菜单：全部替换 / 文档替换 / 表格替换 -->
+                                <Control xsi:type="Menu" id="NumberFormatterMenu">
+                                    <Label resid="Menu.Label" />
                                     <Supertip>
-                                        <Title resid="SplitButton.Label" />
-                                        <Description resid="SplitButton.Tooltip" />
+                                        <Title resid="Menu.Label" />
+                                        <Description resid="Menu.Tooltip" />
                                     </Supertip>
                                     <Icon>
                                         <bt:Image size="16" resid="Icon.16x16" />
                                         <bt:Image size="32" resid="Icon.32x32" />
                                         <bt:Image size="80" resid="Icon.80x80" />
                                     </Icon>
-                                    <!-- 主按钮动作：一次替换正文 + 表格 -->
-                                    <Action xsi:type="ExecuteFunction">
-                                        <FunctionName>formatAllNumbers</FunctionName>
-                                    </Action>
-                                    <!-- 下拉菜单项 -->
                                     <Items>
+                                        <Item id="AllItem">
+                                            <Label resid="AllItem.Label" />
+                                            <Supertip>
+                                                <Title resid="AllItem.Label" />
+                                                <Description resid="AllItem.Tooltip" />
+                                            </Supertip>
+                                            <Icon>
+                                                <bt:Image size="16" resid="Icon.16x16" />
+                                                <bt:Image size="32" resid="Icon.32x32" />
+                                                <bt:Image size="80" resid="Icon.80x80" />
+                                            </Icon>
+                                            <Action xsi:type="ExecuteFunction">
+                                                <FunctionName>formatAllNumbers</FunctionName>
+                                            </Action>
+                                        </Item>
                                         <Item id="BodyItem">
                                             <Label resid="BodyItem.Label" />
                                             <Supertip>
@@ -116,13 +126,15 @@
             <bt:ShortStrings>
                 <bt:String id="GetStarted.Title" DefaultValue="千分符格式化工具" />
                 <bt:String id="CommandsGroup.Label" DefaultValue="千分符工具" />
-                <bt:String id="SplitButton.Label" DefaultValue="千分符" />
+                <bt:String id="Menu.Label" DefaultValue="千分符" />
+                <bt:String id="AllItem.Label" DefaultValue="全部替换" />
                 <bt:String id="BodyItem.Label" DefaultValue="文档替换" />
                 <bt:String id="TableItem.Label" DefaultValue="表格替换" />
             </bt:ShortStrings>
             <bt:LongStrings>
                 <bt:String id="GetStarted.Description" DefaultValue="为整数>=4位、小数恰好2位的数字添加千分符。" />
-                <bt:String id="SplitButton.Tooltip" DefaultValue="一次为正文和表格中的所有数字添加千分符" />
+                <bt:String id="Menu.Tooltip" DefaultValue="为数字添加千分符：可选择全部、仅文档或仅表格" />
+                <bt:String id="AllItem.Tooltip" DefaultValue="同时处理正文和表格中的所有数字" />
                 <bt:String id="BodyItem.Tooltip" DefaultValue="仅处理正文部分，忽略表格" />
                 <bt:String id="TableItem.Tooltip" DefaultValue="仅处理表格部分，忽略正文" />
             </bt:LongStrings>
