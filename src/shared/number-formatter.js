@@ -1,7 +1,14 @@
-// 搜索模式：非数字非小数点字符 + 整数>=4位 + 小数点 + 恰好2位小数 + 非数字非小数点字符
-// 修正：Word 通配符中 "." 表示任意字符，字面小数点必须写作 "\."
-const SEARCH_PATTERN = "[!0-9.][0-9]{4,}\\.[0-9][0-9][!0-9.]";
-const NUMBER_REGEX = /([0-9]{4,}\.[0-9][0-9])/;
+// Word 通配符特殊字符：[ ] ( ) { } * ? < > ! @
+// "." 不是通配符，匹配字面小数点，无需转义。
+// 之前的 BUG#2 误判 "." 为通配符，加 "\\." 反而导致搜索 "\." 两字符而匹配失败。
+
+// 小数模式：边界 + 整数>=4位 + 小数点 + 恰好2位小数 + 边界
+const SEARCH_PATTERN_DECIMAL = "[!0-9.][0-9]{4,}.[0-9][0-9][!0-9.]";
+// 纯整数模式：边界 + 整数>=4位 + 边界（不跟小数点，因 [!0-9.] 排除了 "."）
+const SEARCH_PATTERN_INTEGER = "[!0-9.][0-9]{4,}[!0-9.]";
+
+const NUMBER_REGEX_DECIMAL = /([0-9]{4,}\.[0-9][0-9])/;
+const NUMBER_REGEX_INTEGER = /([0-9]{4,})/;
 
 /**
  * 为匹配到的文本添加千分符
@@ -9,13 +16,36 @@ const NUMBER_REGEX = /([0-9]{4,}\.[0-9][0-9])/;
  * @returns {string|null} 替换后的文本，不匹配则返回 null
  */
 function formatMatchedText(text) {
-    const match = text.match(NUMBER_REGEX);
-    if (!match) return null;
-    const numberText = match[1];
-    const [intPart, decPart] = numberText.split(".");
-    const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    // 修正：原代码漏写 ${}，导致输出字面量 "formattedInt.{decPart}"
-    return text.replace(numberText, `${formattedInt}.${decPart}`);
+    // 先尝试匹配小数
+    let match = text.match(NUMBER_REGEX_DECIMAL);
+    if (match) {
+        const numberText = match[1];
+        const [intPart, decPart] = numberText.split(".");
+        const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return text.replace(numberText, `${formattedInt}.${decPart}`);
+    }
+    // 再尝试匹配纯整数
+    match = text.match(NUMBER_REGEX_INTEGER);
+    if (match) {
+        const numberText = match[1];
+        const formattedInt = numberText.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return text.replace(numberText, formattedInt);
+    }
+    return null;
+}
+
+/**
+ * 在指定搜索范围内执行两种模式的搜索并返回所有结果范围
+ * @param {Word.Range} searchScope body 或 cell.body
+ * @returns {Promise<Word.Range[]>} 匹配的范围数组
+ */
+async function searchNumbers(context, searchScope) {
+    const decimalResults = searchScope.search(SEARCH_PATTERN_DECIMAL, { matchWildcards: true });
+    const integerResults = searchScope.search(SEARCH_PATTERN_INTEGER, { matchWildcards: true });
+    decimalResults.load("text");
+    integerResults.load("text");
+    await context.sync();
+    return [...decimalResults.items, ...integerResults.items];
 }
 
 /**
@@ -25,16 +55,14 @@ function formatMatchedText(text) {
 async function processBodyNumbers() {
     return await Word.run(async (context) => {
         const body = context.document.body;
-        const results = body.search(SEARCH_PATTERN, { matchWildcards: true });
-        results.load("text");
-        await context.sync();
+        const ranges = await searchNumbers(context, body);
         // 判断每个搜索结果是否在表格内
-        for (const range of results.items) {
+        for (const range of ranges) {
             range.parentTableOrNullObject.load("isNullObject");
         }
         await context.sync();
         const replacements = [];
-        for (const range of results.items) {
+        for (const range of ranges) {
             if (!range.parentTableOrNullObject.isNullObject) continue;
             const newText = formatMatchedText(range.text);
             if (newText !== null) {
@@ -52,8 +80,8 @@ async function processBodyNumbers() {
 
 /**
  * 处理表格部分的数字（含嵌套表格）
- * 修正：Word.Table 没有 cells 属性，必须经 table.rows -> row.cells 遍历单元格；
- *       body.tables 仅含顶层表格，嵌套表格通过 table.tables 逐层递归处理
+ * Word.Table 没有 cells 属性，必须经 table.rows -> row.cells 遍历单元格；
+ * body.tables 仅含顶层表格，嵌套表格通过 table.tables 逐层递归处理
  * @returns {Promise<number>} 处理数量
  */
 async function processTableNumbers() {
@@ -88,27 +116,23 @@ async function processTableLevel(context, tables) {
     }
     await context.sync();
 
-    // 在本层每个单元格中搜索
-    const searchResults = [];
+    // 在本层每个单元格中搜索两种模式
+    const allRanges = [];
     for (const table of tables) {
         for (const row of table.rows.items) {
             for (const cell of row.cells.items) {
-                const results = cell.body.search(SEARCH_PATTERN, { matchWildcards: true });
-                results.load("text");
-                searchResults.push(results);
+                const ranges = await searchNumbers(context, cell.body);
+                allRanges.push(...ranges);
             }
         }
     }
-    await context.sync();
 
     // 批量提交替换
     const replacements = [];
-    for (const results of searchResults) {
-        for (const range of results.items) {
-            const newText = formatMatchedText(range.text);
-            if (newText !== null) {
-                replacements.push({ range, newText });
-            }
+    for (const range of allRanges) {
+        const newText = formatMatchedText(range.text);
+        if (newText !== null) {
+            replacements.push({ range, newText });
         }
     }
     for (const { range, newText } of replacements) {
@@ -136,5 +160,4 @@ async function processAllNumbers() {
     return { bodyCount, tableCount };
 }
 
-// 修正：共享模块需经 webpack 打包，不能再用 <script src> 引入，故导出供 import 使用
 export { processBodyNumbers, processTableNumbers, processAllNumbers };
